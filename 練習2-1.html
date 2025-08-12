@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>我的每日小確幸</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Playfair+Display:ital,wght@0,400..900;1,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 全域設定，移除圓角 */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Lora', serif;
+      background: #fafafa;
+      color: #333;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .hero-img {
+      width: 100%;
+      height: auto;
+      max-height: 40vh;
+      object-fit: cover;
+      margin-bottom: 40px;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.5em;
+      text-align: center;
+      margin-bottom: 40px;
+      color: #333;
+    }
+
+    /* 篩選按鈕列樣式 */
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 50px;
+    }
+    .filter-bar button {
+      padding: 8px 15px;
+      border: 1px solid #ccc;
+      background: white;
+      cursor: pointer;
+      font-family: 'Lora', serif;
+      font-size: 1.1em;
+      transition: all 0.2s ease-in-out;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .filter-bar button:hover, .filter-bar .active {
+      background-color: #f0f0f0;
+      color: #000;
+      border-color: #000;
+    }
+
+    /* 文章卡片網格 */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .card {
+      background: white;
+      box-shadow: none;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      height: auto;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 20px;
+      position: relative;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .card img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      margin-bottom: 15px;
+    }
+    .card .content {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+    .card .content h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2em;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .card .content p {
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      color: #555;
+    }
+    .read-more {
+      display: inline-block;
+      padding: 0;
+      background: none;
+      border: none;
+      color: #000;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.2s;
+      font-family: 'Lora', serif;
+      font-size: 1.1em;
+      text-align: left;
+    }
+    .read-more:hover {
+      color: #888;
+      background: none;
+    }
+    .hidden { display: none; }
+    /* 顯示在卡片右下角的愛心數 */
+    .likes-info {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 1.1rem;
+      color: #888;
+    }
+    /* 卡片上的愛心按鈕 */
+    .card-like-button {
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      color: #ccc;
+      cursor: pointer;
+      padding: 0;
+    }
+    .card-like-button.liked { color: #e55; }
+    .card-like-button.author-liked { color: #e55; }
+    .card-like-button:disabled { cursor: not-allowed; }
+    .card-likes-count {
+      font-size: 1.1rem;
+      color: #888;
+    }
+
+    /* 單篇文章樣式 */
+    .full-article {
+      font-size: 1.1rem;
+      background: white;
+      padding: 40px;
+      border: 1px solid #eee;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .full-article h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 3em;
+      margin-bottom: 10px;
+    }
+    .back-btn {
+      margin-top: 30px;
+      display: inline-block;
+      color: #888;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: 'Lora', serif;
+    }
+    .back-btn:hover {
+      text-decoration: underline;
+    }
+
+    /* 留言區樣式 */
+    .comment-form {
+      display: flex;
+      flex-direction: column;
+      margin-top: 30px;
+    }
+    #comment-input, #comment-nickname {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 0;
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      color: #333;
+    }
+    #comment-nickname:disabled {
+      background-color: #f0f0f0;
+      cursor: not-allowed;
+    }
+    #submit-comment {
+      align-self: flex-start;
+      padding: 10px 20px;
+      background-color: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: 'Lora', serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    #submit-comment:hover {
+      background-color: #555;
+    }
+    .comment-list { padding: 0; }
+    .comment-item {
+        border-bottom: 1px solid #eee;
+        padding: 15px 0;
+    }
+    .comment-item.reply {
+        margin-left: 20px;
+        padding-left: 20px;
+        border-left: 2px solid #ddd;
+    }
+    .comment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 5px;
+    }
+    .comment-info {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+    .comment-text { font-size: 1.1rem; margin: 5px 0; }
+    .comment-item small {
+      display: block;
+      text-align: left;
+      color: #888;
+    }
+    .comment-actions {
+      display: flex;
+      gap: 10px;
+      margin-left: auto;
+    }
+    /* ⬇️ 新增：圖示按鈕樣式 */
+    .comment-actions button {
+      padding: 5px; /* 調整內距 */
+      border: none;
+      background-color: transparent;
+      color: #888;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: color 0.2s;
+    }
+    .comment-actions button:hover {
+        color: #333;
+        background-color: #f0f0f0;
+    }
+    .comment-actions button i {
+        pointer-events: none; /* 防止點擊圖示時觸發兩次 */
+    }
+
+    .edit-textarea {
+      width: 100%;
+      padding: 5px;
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      border: 1px solid #ccc;
+      border-radius: 0;
+      margin-top: 5px;
+    }
+    .edit-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .edit-actions button {
+      padding: 8px 15px;
+      border: 1px solid #ccc;
+      background-color: white;
+      color: #333;
+      font-size: 1rem;
+      cursor: pointer;
+      font-family: 'Lora', serif;
+    }
+    .edit-actions .save-btn { background-color: #333; color: white; }
+    .edit-actions .save-btn:hover { background-color: #555; }
+    .edit-actions .cancel-btn:hover { background-color: #eee; }
+
+    .user-selector {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      padding: 20px;
+      font-family: 'Lora', serif;
+    }
+
+    .like-button-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .like-button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #ccc;
+      transition: color 0.2s;
+    }
+    .like-button:hover { color: #e55; }
+    .like-button.liked { color: #e55; }
+    .like-button.author-liked { color: #e55; }
+    .like-button:disabled { cursor: not-allowed; }
+
+    .reply-form {
+        display: none;
+        flex-direction: column;
+        margin-top: 10px;
+        margin-left: 20px;
+        padding-left: 20px;
+        border-left: 2px solid #ddd;
+    }
+    .reply-form.active { display: flex; }
+    .reply-form-input, .reply-form-nickname {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 8px;
+        border: 1px solid #ccc;
+        font-family: 'Lora', serif;
+        font-size: 1rem;
+    }
+    .reply-form-nickname:disabled { background-color: #f0f0f0; cursor: not-allowed; }
+    .reply-form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    .reply-form-actions button {
+        padding: 6px 12px;
+        border: none;
+        cursor: pointer;
+        font-family: 'Lora', serif;
+    }
+    .reply-submit-btn { background-color: #333; color: white; }
+    .reply-cancel-btn { background-color: #ccc; color: #333; }
+  </style>
+</head>
+<body>
+  <div class="user-selector">
+    <span>當前身份：<strong id="current-user-name">部落格作者</strong></span>
+    <button id="author-btn" data-id="author">部落格作者</button>
+    <button id="guest1-btn" data-id="guest1">遊客 1</button>
+    <button id="guest2-btn" data-id="guest2">遊客 2</button>
+  </div>
+
+  <img src="https://picsum.photos/id/777/1200/400" alt="橫幅圖片" class="hero-img" loading="lazy" />
+  <h1>我的每日小確幸</h1>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="life">Life</button>
+    <button class="filter-btn" data-filter="travel">Travel</button>
+    <button class="filter-btn" data-filter="food">Food</button>
+  </div>
+
+  <div class="grid" id="postGrid">
+    </div>
+
+  <div id="fullArticle" class="full-article hidden">
+    <img id="articleImage" src="" alt="文章圖片" style="width: 100%; height: auto; max-height: 300px; object-fit: cover; margin-bottom: 30px;" />
+    <h2 id="articleTitle">標題</h2>
+    <small id="articleDate" style="color: #888; display: block; margin: 15px 0 20px; font-style: italic;"></small>
+    <p id="articleContent">完整內容將在這顯示</p>
+    <div class="like-button-container">
+      <button id="like-button" class="like-button"><i class="fas fa-heart"></i></button>
+      <span id="like-count">0</span>
+    </div>
+    <div class="back-btn" onclick="backToList()">← 返回列表</div>
+    <hr style="margin: 30px 0;">
+    <h3>留言</h3>
+    <div id="comments-container">
+    </div>
+    <div class="comment-form">
+      <input type="text" id="comment-nickname" placeholder="您的暱稱（選填）" />
+      <textarea id="comment-input" placeholder="留下您的想法..." rows="4"></textarea>
+      <button id="submit-comment">送出</button>
+    </div>
+  </div>
+
+  <script>
+    const posts = [
+      {
+        id: 1,
+        category: 'life',
+        title: '溫馨家庭早晨',
+        summary: '享受陽光與孩子的笑聲，是一天最美的開始。',
+        content: '今天一早醒來，陽光灑進窗邊，孩子們笑鬧聲從廚房傳來，空氣中飄著煎蛋香味。簡單的生活片段，卻有著無限的幸福。 Lorem ipsum dolor sit amet consectetur, adipisicing elit. Unde eum, ipsam vel nemo ad eveniet magnam quibusdam. Nobis voluptatem est ut neque corrupti amet cum expedita laborum voluptatibus saepe nulla iure odio quia eveniet officiis qui eum ab incidunt, quis illo rerum suscipit harum a autem eaque. Excepturi corporis illum necessitatibus rem inventore ipsum consequuntur voluptatibus voluptatum dolorem, iste laboriosam saepe explicabo odit eaque dolores odio nam provident delectus amet cum asperiores. Voluptatum voluptas, expedita error totam quam in cum, ex saepe delectus porro debitis tempore blanditiis sequi commodi eveniet repellat deserunt esse fuga nostrum a ea. Sit, molestias, numquam.',
+        image: 'images/a1.jpg',
+        date: '2025-08-01',
+        likes: 0
+      },
+      {
+        id: 2,
+        category: 'travel',
+        title: '山間小旅行',
+        summary: '蜿蜒小徑與鳥鳴聲，治癒每個疲憊的心靈。',
+        content: '我們走在綠意盎然的小徑中，遠離塵囂。溪水潺潺，空氣清新，每一步都像是在修復自己。這一趟旅程，讓我重新找回平靜的力量。 Lorem ipsum dolor sit amet consectetur, adipisicing elit. Unde eum, ipsam vel nemo ad eveniet magnam quibusdam. Nobis voluptatem est ut neque corrupti amet cum expedita laborum voluptatibus saepe nulla iure quia eveniet officiis qui eum ab incidunt, quis illo rerum suscipit harum a autem eaque. Excepturi corporis illum necessitatibus rem inventore ipsum consequuntur voluptatibus voluptatum dolorem, iste laboriosam saepe explicabo odit eaque dolores odio nam provident delectus amet cum asperiores. Voluptatum voluptas, expedita error totam quam in cum, ex saepe delectus porro debitis tempore blanditiis sequi commodi eveniet repellat deserunt esse fuga nostrum a ea. Sit, molestias, numquam.',
+        image: 'images/a2.jpg',
+        date: '2025-08-04',
+        likes: 0
+      },
+      {
+        id: 3,
+        category: 'food',
+        title: '烤香蕉鬆餅',
+        summary: '香蕉與核桃交織出的療癒滋味。',
+        content: '將熟透的香蕉搗碎與麵糊混合，撒上核桃，放入烤箱，飄出甜甜香氣。這是我最愛的下午點心，配上一杯牛奶，剛剛好。Lorem ipsum dolor sit amet consectetur, adipisicing elit. Unde eum, ipsam vel nemo ad eveniet magnam quibusdam. Nobis voluptatem est ut neque corrupti amet cum expedita laborum voluptatibus saepe nulla iure odio quia eveniet officiis qui eum ab incidunt, quis illo rerum suscipit harum a autem eaque. Excepturi corporis illum necessitatibus rem inventore ipsum consequuntur voluptatibus voluptatum dolorem, iste laboriosam saepe explicabo odit eaque dolores odio nam provident delectus amet cum asperiores. Voluptatum voluptas, expedita error totam quam in cum, ex saepe delectus porro debitis tempore blanditiis sequi commodi eveniet repellat deserunt esse fuga nostrum a ea. Sit, molestias, numquam.',
+        image: 'images/a3.jpg',
+        date: '2025-09-02',
+        likes: 0
+      },
+      {
+        id: 4,
+        category: 'life',
+        title: '夜晚的靜謐閱讀',
+        summary: '柔光之下，文字與思緒一同流動。',
+        content: '晚上總喜歡關掉手機，泡杯茶，讓自己沉浸在書中的世界，感受一種屬於自己的平靜。 Lorem ipsum dolor sit amet consectetur, adipisicing elit. Unde eum, ipsam vel nemo ad eveniet magnam quibusdam. Nobis voluptatem est ut neque corrupti amet cum expedita laborum voluptatibus saepe nulla iure odio quia eveniet officiis qui eum ab incidunt, quis illo rerum suscipit harum a autem eaque. Excepturi corporis illum necessitatibus rem inventore ipsum consequuntur voluptatibus voluptatum dolorem, iste laboriosam saepe explicabo odit eaque dolores odio nam provident delectus amet cum asperiores. Voluptatum voluptas, expedita error totam quam in cum, ex saepe delectus porro debitis tempore blanditiis sequi commodi eveniet repellat deserunt esse fuga nostrum a ea. Sit, molestias, numquam.',
+        image: 'images/a4.jpg',
+        date: '2025-10-15',
+        likes: 0
+      }
+    ];
+
+    const users = {
+      'guest1': { id: 'guest1', nickname: '遊客 1' },
+      'guest2': { id: 'guest2', nickname: '遊客 2' },
+      'author': { id: 'author', nickname: '部落格作者' },
+      'anonymous': { id: 'anonymous', nickname: '匿名遊客' },
+    };
+    
+    let currentUser = users.author;
+    let likedPosts = JSON.parse(localStorage.getItem('likedPosts')) || {};
+    let allPostsLikes = JSON.parse(localStorage.getItem('allPostsLikes')) || {};
+
+    // 初始化每篇文章的按讚數
+    posts.forEach(post => {
+      if (allPostsLikes[post.id] === undefined) {
+        allPostsLikes[post.id] = 0;
+      }
+      post.likes = allPostsLikes[post.id];
+    });
+
+    const grid = document.getElementById('postGrid');
+    const articleSection = document.getElementById('fullArticle');
+    const articleTitle = document.getElementById('articleTitle');
+    const articleContent = document.getElementById('articleContent');
+    const articleDate = document.getElementById('articleDate');
+
+    // 使用者身份切換功能
+    document.querySelectorAll('.user-selector button').forEach(button => {
+        button.addEventListener('click', () => {
+            const userId = button.dataset.id;
+            currentUser = users[userId];
+            
+            document.getElementById('current-user-name').innerText = currentUser.nickname;
+            alert(`你現在是：${currentUser.nickname}`);
+            
+            const currentPostId = document.getElementById('submit-comment').dataset.postId;
+            if (currentPostId) {
+                renderComments(currentPostId);
+                updateLikeButtonState(currentPostId);
+            }
+            
+            const nicknameInput = document.getElementById('comment-nickname');
+            if (currentUser.id === 'author') {
+              nicknameInput.value = '部落格作者';
+              nicknameInput.disabled = true;
+            } else {
+              nicknameInput.value = '';
+              nicknameInput.disabled = false;
+            }
+            renderCards();
+        });
+    });
+
+    // ⏬ 動態建立卡片
+    function renderCards() {
+      grid.innerHTML = '';
+      posts.forEach(post => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.category = post.category;
+        card.dataset.id = post.id;
+        
+        const isLiked = likedPosts[currentUser.id] && likedPosts[currentUser.id][post.id];
+        let likedClass = '';
+        if (currentUser.id === 'author') {
+            likedClass = 'author-liked';
+        } else if (isLiked) {
+            likedClass = 'liked';
+        }
+        const disabledAttr = currentUser.id === 'author' ? 'disabled' : '';
+
+        card.innerHTML = `
+          <img src="${post.image}" alt="文章圖片">
+          <div class="content">
+            <small>${post.date}</small>
+            <h3>${post.title}</h3>
+            <p>${post.summary}</p>
+            <button class="read-more" data-id="${post.id}">閱讀更多 →</button>
+          </div>
+          <div class="likes-info">
+            <button class="card-like-button ${likedClass}" data-id="${post.id}" ${disabledAttr}>
+              <i class="fas fa-heart"></i>
+            </button>
+            <span class="card-likes-count">${post.likes}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      document.querySelectorAll('.card-like-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const postId = e.currentTarget.dataset.id;
+          toggleLike(postId);
+        });
+      });
+    }
+
+    // ⏳ 點擊閱讀更多
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('read-more')) {
+        const id = e.target.dataset.id;
+        const post = posts.find(p => p.id == id);
+        articleTitle.innerText = post.title;
+        articleContent.innerText = post.content;
+        articleImage.src = post.image;
+        articleDate.innerText = post.date;
+        grid.classList.add('hidden');
+        articleSection.classList.remove('hidden');
+        window.scrollTo(0, 0);
+
+        document.getElementById('comments-container').innerHTML = '';
+        renderComments(id);
+        document.getElementById('submit-comment').dataset.postId = id;
+        
+        document.getElementById('like-count').innerText = post.likes;
+        updateLikeButtonState(id);
+      }
+    });
+
+    // ↩️ 返回列表
+    function backToList() {
+      articleSection.classList.add('hidden');
+      grid.classList.remove('hidden');
+      renderCards();
+    }
+
+    // 顯示特定文章的留言
+    function renderComments(postId) {
+      const container = document.getElementById('comments-container');
+      const postComments = comments[postId];
+      container.innerHTML = '';
+
+      if (postComments && postComments.length > 0) {
+        postComments.forEach((comment, index) => {
+          const commentDiv = renderCommentItem(comment, index, postId);
+          container.appendChild(commentDiv);
+        });
+      } else {
+        container.innerHTML = '<p style="color: #888; font-style: italic;">目前沒有留言，來當第一位吧！</p>';
+      }
+      
+      addCommentEventListeners(postId);
+    }
+    
+    // 渲染單一留言（或回覆）的函式
+    function renderCommentItem(comment, index, postId, isReply = false, replyIndex = null) {
+        const commentDiv = document.createElement('div');
+        commentDiv.className = `comment-item ${isReply ? 'reply' : ''}`;
+
+        let actionButtons = '';
+        // 只有留言者自己能編輯
+        if (comment.userId === currentUser.id) {
+            actionButtons += `<button class="edit-btn" data-index="${index}" ${isReply ? `data-reply-index="${replyIndex}"` : ''} title="編輯"><i class="fas fa-pen-to-square"></i></button>`;
+        }
+        // 作者可以刪除所有留言，遊客只能刪除自己的
+        if (currentUser.id === 'author' || comment.userId === currentUser.id) {
+            actionButtons += `<button class="delete-btn" data-index="${index}" ${isReply ? `data-reply-index="${replyIndex}"` : ''} title="刪除"><i class="fas fa-trash-can"></i></button>`;
+        }
+        if (currentUser.id === 'author' && !isReply) {
+            actionButtons += `<button class="reply-btn" data-index="${index}" title="回覆"><i class="fas fa-reply"></i></button>`;
+        }
+
+        commentDiv.innerHTML = `
+            <div class="comment-header">
+              <div class="comment-info">
+                <small>${comment.date}</small>
+                <p class="comment-text"><strong>${comment.nickname}</strong>：${comment.text}</p>
+              </div>
+              <div class="comment-actions">
+                ${actionButtons}
+              </div>
+            </div>
+        `;
+        
+        if (!isReply) {
+            const replyFormContainer = document.createElement('div');
+            replyFormContainer.className = 'reply-form';
+            replyFormContainer.id = `reply-form-${index}`;
+            commentDiv.appendChild(replyFormContainer);
+        }
+
+        // 遞迴渲染回覆
+        if (comment.replies && comment.replies.length > 0) {
+            comment.replies.forEach((reply, i) => {
+                const replyDiv = renderCommentItem(reply, index, postId, true, i);
+                commentDiv.appendChild(replyDiv);
+            });
+        }
+        
+        return commentDiv;
+    }
+
+    // 為所有留言和回覆添加事件監聽器
+    function addCommentEventListeners(postId) {
+        const container = document.getElementById('comments-container');
+        
+        // 刪除按鈕事件
+        container.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const commentIndex = e.target.dataset.index;
+                const replyIndex = e.target.dataset.replyIndex;
+
+                if (confirm('確定要刪除這則留言嗎？')) {
+                    if (replyIndex) {
+                        comments[postId][commentIndex].replies.splice(replyIndex, 1);
+                    } else {
+                        comments[postId].splice(commentIndex, 1);
+                    }
+                    renderComments(postId);
+                }
+            });
+        });
+
+        // 編輯按鈕事件
+        container.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const commentIndex = e.target.dataset.index;
+                const replyIndex = e.target.dataset.replyIndex;
+                const parentDiv = e.target.closest('.comment-item');
+                const commentTextDiv = parentDiv.querySelector('.comment-text');
+
+                let commentToEdit;
+                if (replyIndex) {
+                    commentToEdit = comments[postId][commentIndex].replies[replyIndex];
+                } else {
+                    commentToEdit = comments[postId][commentIndex];
+                }
+                const originalText = commentToEdit.text;
+
+                const commentActionsDiv = parentDiv.querySelector('.comment-actions');
+                commentActionsDiv.classList.add('hidden');
+
+                commentTextDiv.innerHTML = `
+                    <textarea class="edit-textarea">${originalText}</textarea>
+                    <div class="edit-actions">
+                        <button class="save-btn">儲存</button>
+                        <button class="cancel-btn">取消</button>
+                    </div>
+                `;
+
+                parentDiv.querySelector('.save-btn').addEventListener('click', () => {
+                    const newText = parentDiv.querySelector('.edit-textarea').value.trim();
+                    if (newText) {
+                        if (replyIndex) {
+                            comments[postId][commentIndex].replies[replyIndex].text = newText;
+                        } else {
+                            comments[postId][commentIndex].text = newText;
+                        }
+                    }
+                    renderComments(postId);
+                });
+
+                parentDiv.querySelector('.cancel-btn').addEventListener('click', () => {
+                    renderComments(postId);
+                });
+            });
+        });
+
+        // 回覆按鈕事件
+        container.querySelectorAll('.reply-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const commentIndex = e.target.dataset.index;
+                const replyFormContainer = document.getElementById(`reply-form-${commentIndex}`);
+                
+                document.querySelectorAll('.reply-form').forEach(form => form.classList.remove('active'));
+
+                replyFormContainer.innerHTML = `
+                    <input type="text" class="reply-form-nickname" value="部落格作者" disabled />
+                    <textarea class="reply-form-input" placeholder="回覆這則留言..." rows="2"></textarea>
+                    <div class="reply-form-actions">
+                        <button class="reply-submit-btn">送出</button>
+                        <button class="reply-cancel-btn">取消</button>
+                    </div>
+                `;
+                replyFormContainer.classList.add('active');
+
+                replyFormContainer.querySelector('.reply-submit-btn').addEventListener('click', () => {
+                    const replyText = replyFormContainer.querySelector('.reply-form-input').value.trim();
+                    if (replyText) {
+                        const newReply = {
+                            text: replyText,
+                            date: new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }),
+                            userId: currentUser.id,
+                            nickname: '部落格作者'
+                        };
+                        if (!comments[postId][commentIndex].replies) {
+                            comments[postId][commentIndex].replies = [];
+                        }
+                        comments[postId][commentIndex].replies.push(newReply);
+                        renderComments(postId);
+                    }
+                });
+
+                replyFormContainer.querySelector('.reply-cancel-btn').addEventListener('click', () => {
+                    replyFormContainer.classList.remove('active');
+                    replyFormContainer.innerHTML = '';
+                });
+            });
+        });
+    }
+
+
+    // 提交新留言的函式
+    document.getElementById('submit-comment').addEventListener('click', () => {
+      const postId = document.getElementById('submit-comment').dataset.postId;
+      const inputElement = document.getElementById('comment-input');
+      const commentText = inputElement.value.trim();
+      const nicknameInput = document.getElementById('comment-nickname');
+
+      let userNickname;
+      if (currentUser.id === 'author') {
+        userNickname = '部落格作者';
+      } else {
+        userNickname = nicknameInput.value.trim() || '匿名遊客';
+      }
+
+      if (commentText) {
+        const newComment = {
+          text: commentText,
+          date: new Date().toLocaleDateString('zh-TW', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }),
+          userId: currentUser.id,
+          nickname: userNickname,
+          replies: []
+        };
+        comments[postId].push(newComment);
+        inputElement.value = '';
+        renderComments(postId);
+      }
+    });
+
+    // 🎯 篩選文章類別
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelector('.filter-btn.active').classList.remove('active');
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('.card').forEach(card => {
+          const match = filter === 'all' || card.dataset.category === filter;
+          card.classList.toggle('hidden', !match);
+        });
+        grid.classList.remove('hidden');
+        articleSection.classList.add('hidden');
+      });
+    });
+
+    // 留言資料庫，使用物件來儲存每篇文章的留言
+    let comments = {
+      1: [],
+      2: [],
+      3: [],
+      4: []
+    };
+
+    // 處理點讚功能的通用函式
+    function toggleLike(postId) {
+      const likeButtonInArticle = document.getElementById('like-button');
+      const likeCountInArticle = document.getElementById('like-count');
+      const cardLikeButton = document.querySelector(`.card-like-button[data-id="${postId}"]`);
+      const cardLikeCount = document.querySelector(`.card-like-button[data-id="${postId}"] + .card-likes-count`);
+      
+      const userId = currentUser.id;
+
+      if (currentUser.id === 'author') {
+        return;
+      }
+
+      if (!likedPosts[userId]) {
+        likedPosts[userId] = {};
+      }
+
+      if (likedPosts[userId][postId]) {
+        // 取消按讚
+        likedPosts[userId][postId] = false;
+        allPostsLikes[postId]--;
+      } else {
+        // 按讚
+        likedPosts[userId][postId] = true;
+        allPostsLikes[postId]++;
+      }
+      
+      // 更新 posts 資料中的 likes
+      posts.find(p => p.id == postId).likes = allPostsLikes[postId];
+
+      // 更新頁面顯示和 localStorage
+      if (likeCountInArticle) {
+        likeCountInArticle.innerText = allPostsLikes[postId];
+      }
+      if (cardLikeCount) {
+        cardLikeCount.innerText = allPostsLikes[postId];
+      }
+      
+      updateLikeButtonState(postId);
+      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
+      localStorage.setItem('allPostsLikes', JSON.stringify(allPostsLikes));
+    }
+
+    // 更新按讚按鈕狀態的函式
+    function updateLikeButtonState(postId) {
+      const likeButtonInArticle = document.getElementById('like-button');
+      const cardLikeButton = document.querySelector(`.card-like-button[data-id="${postId}"]`);
+      const userId = currentUser.id;
+      const isAuthor = currentUser.id === 'author';
+      const isLiked = likedPosts[userId] && likedPosts[userId][postId];
+      
+      // 更新文章內頁的按鈕狀態
+      if (likeButtonInArticle) {
+        likeButtonInArticle.classList.toggle('liked', isLiked);
+        likeButtonInArticle.classList.toggle('author-liked', isAuthor);
+        likeButtonInArticle.disabled = isAuthor;
+      }
+      
+      // 更新卡片上的按鈕狀態
+      if (cardLikeButton) {
+        cardLikeButton.classList.toggle('liked', isLiked);
+        cardLikeButton.classList.toggle('author-liked', isAuthor);
+        cardLikeButton.disabled = isAuthor;
+      }
+    }
+
+    // 為文章內頁的按鈕添加事件監聽器
+    document.getElementById('like-button').addEventListener('click', () => {
+      const postId = document.getElementById('submit-comment').dataset.postId;
+      toggleLike(postId);
+    });
+
+    // 頁面載入時的初始化設定
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCards();
+      const nicknameInput = document.getElementById('comment-nickname');
+      nicknameInput.value = '部落格作者';
+      nicknameInput.disabled = true;
+    });
+  </script>
+</body>
+</html>
